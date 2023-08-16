@@ -218,6 +218,9 @@ import static org.apache.calcite.sql.fun.SqlLibraryOperators.RIGHT;
 import static org.apache.calcite.sql.fun.SqlLibraryOperators.RLIKE;
 import static org.apache.calcite.sql.fun.SqlLibraryOperators.RPAD;
 import static org.apache.calcite.sql.fun.SqlLibraryOperators.SAFE_CAST;
+import static org.apache.calcite.sql.fun.SqlLibraryOperators.SAFE_DIVIDE;
+import static org.apache.calcite.sql.fun.SqlLibraryOperators.SAFE_MULTIPLY;
+import static org.apache.calcite.sql.fun.SqlLibraryOperators.SAFE_NEGATE;
 import static org.apache.calcite.sql.fun.SqlLibraryOperators.SAFE_OFFSET;
 import static org.apache.calcite.sql.fun.SqlLibraryOperators.SAFE_ORDINAL;
 import static org.apache.calcite.sql.fun.SqlLibraryOperators.SEC;
@@ -579,36 +582,51 @@ public class RexImpTable {
       map.put(LOG, new LogImplementor());
       map.put(LOG10, new LogImplementor());
 
-      map.put(RAND, new RandImplementor());
-      map.put(RAND_INTEGER, new RandIntegerImplementor());
+      defineReflective(RAND, BuiltInMethod.RAND.method,
+          BuiltInMethod.RAND_SEED.method);
+      defineReflective(RAND_INTEGER, BuiltInMethod.RAND_INTEGER.method,
+          BuiltInMethod.RAND_INTEGER_SEED.method);
 
-      defineMethod(ACOS, "acos", NullPolicy.STRICT);
-      defineMethod(ACOSH, "acosh", NullPolicy.STRICT);
-      defineMethod(ASIN, "asin", NullPolicy.STRICT);
-      defineMethod(ASINH, "asinh", NullPolicy.STRICT);
-      defineMethod(ATAN, "atan", NullPolicy.STRICT);
-      defineMethod(ATAN2, "atan2", NullPolicy.STRICT);
-      defineMethod(ATANH, "atanh", NullPolicy.STRICT);
-      defineMethod(CBRT, "cbrt", NullPolicy.STRICT);
-      defineMethod(COS, "cos", NullPolicy.STRICT);
-      defineMethod(COSH, "cosh", NullPolicy.STRICT);
-      defineMethod(COT, "cot", NullPolicy.STRICT);
-      defineMethod(COTH, "coth", NullPolicy.STRICT);
-      defineMethod(CSC, "csc", NullPolicy.STRICT);
-      defineMethod(CSCH, "csch", NullPolicy.STRICT);
-      defineMethod(DEGREES, "degrees", NullPolicy.STRICT);
-      defineMethod(POW, "power", NullPolicy.STRICT);
-      defineMethod(RADIANS, "radians", NullPolicy.STRICT);
-      defineMethod(ROUND, "sround", NullPolicy.STRICT);
-      defineMethod(SEC, "sec", NullPolicy.STRICT);
-      defineMethod(SECH, "sech", NullPolicy.STRICT);
-      defineMethod(SIGN, "sign", NullPolicy.STRICT);
-      defineMethod(SIN, "sin", NullPolicy.STRICT);
-      defineMethod(SINH, "sinh", NullPolicy.STRICT);
-      defineMethod(TAN, "tan", NullPolicy.STRICT);
-      defineMethod(TANH, "tanh", NullPolicy.STRICT);
-      defineMethod(TRUNC, "struncate", NullPolicy.STRICT);
-      defineMethod(TRUNCATE, "struncate", NullPolicy.STRICT);
+      defineMethod(ACOS, BuiltInMethod.ACOS.method, NullPolicy.STRICT);
+      defineMethod(ACOSH, BuiltInMethod.ACOSH.method, NullPolicy.STRICT);
+      defineMethod(ASIN, BuiltInMethod.ASIN.method, NullPolicy.STRICT);
+      defineMethod(ASINH, BuiltInMethod.ASINH.method, NullPolicy.STRICT);
+      defineMethod(ATAN, BuiltInMethod.ATAN.method, NullPolicy.STRICT);
+      defineMethod(ATAN2, BuiltInMethod.ATAN2.method, NullPolicy.STRICT);
+      defineMethod(ATANH, BuiltInMethod.ATANH.method, NullPolicy.STRICT);
+      defineMethod(CBRT, BuiltInMethod.CBRT.method, NullPolicy.STRICT);
+      defineMethod(COS, BuiltInMethod.COS.method, NullPolicy.STRICT);
+      defineMethod(COSH, BuiltInMethod.COSH.method, NullPolicy.STRICT);
+      defineMethod(COT, BuiltInMethod.COT.method, NullPolicy.STRICT);
+      defineMethod(COTH, BuiltInMethod.COTH.method, NullPolicy.STRICT);
+      defineMethod(CSC, BuiltInMethod.CSC.method, NullPolicy.STRICT);
+      defineMethod(CSCH, BuiltInMethod.CSCH.method, NullPolicy.STRICT);
+      defineMethod(DEGREES, BuiltInMethod.DEGREES.method, NullPolicy.STRICT);
+      defineMethod(IS_INF, BuiltInMethod.IS_INF.method, NullPolicy.STRICT);
+      defineMethod(IS_NAN, BuiltInMethod.IS_NAN.method, NullPolicy.STRICT);
+      defineMethod(POW, BuiltInMethod.POWER.method, NullPolicy.STRICT);
+      defineMethod(RADIANS, BuiltInMethod.RADIANS.method, NullPolicy.STRICT);
+      defineMethod(ROUND, BuiltInMethod.SROUND.method, NullPolicy.STRICT);
+      defineMethod(SEC, BuiltInMethod.SEC.method, NullPolicy.STRICT);
+      defineMethod(SECH, BuiltInMethod.SECH.method, NullPolicy.STRICT);
+      defineMethod(SIGN, BuiltInMethod.SIGN.method, NullPolicy.STRICT);
+      defineMethod(SIN, BuiltInMethod.SIN.method, NullPolicy.STRICT);
+      defineMethod(SINH, BuiltInMethod.SINH.method, NullPolicy.STRICT);
+      defineMethod(TAN, BuiltInMethod.TAN.method, NullPolicy.STRICT);
+      defineMethod(TANH, BuiltInMethod.TANH.method, NullPolicy.STRICT);
+      defineMethod(TRUNC, BuiltInMethod.STRUNCATE.method, NullPolicy.STRICT);
+      defineMethod(TRUNCATE, BuiltInMethod.STRUNCATE.method, NullPolicy.STRICT);
+
+      map.put(SAFE_ADD,
+          new SafeArithmeticImplementor(BuiltInMethod.SAFE_ADD.method));
+      map.put(SAFE_DIVIDE,
+          new SafeArithmeticImplementor(BuiltInMethod.SAFE_DIVIDE.method));
+      map.put(SAFE_MULTIPLY,
+          new SafeArithmeticImplementor(BuiltInMethod.SAFE_MULTIPLY.method));
+      map.put(SAFE_NEGATE,
+          new SafeArithmeticImplementor(BuiltInMethod.SAFE_MULTIPLY.method));
+      map.put(SAFE_SUBTRACT,
+          new SafeArithmeticImplementor(BuiltInMethod.SAFE_SUBTRACT.method));
 
       map.put(PI, new PiImplementor());
       return populate2();

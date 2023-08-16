@@ -2783,6 +2783,9 @@ BigQuery's type system uses confusingly different names for types and functions:
 | b o | RPAD(string, length[, pattern ])             | Returns a string or bytes value that consists of *string* appended to *length* with *pattern*
 | b o | RTRIM(string)                                | Returns *string* with all blanks removed from the end
 | b | SAFE_CAST(value AS type)                       | Converts *value* to *type*, returning NULL if conversion fails
+| b | SAFE_DIVIDE(numeric1, numeric2)                | Returns *numeric1* / *numeric2*, or NULL on overflow or if *numeric2* is zero
+| b | SAFE_MULTIPLY(numeric1, numeric2)              | Returns *numeric1* * *numeric2*, or NULL on overflow
+| b | SAFE_NEGATE(numeric)                           | Returns *numeric* * -1, or NULL on overflow
 | b | SAFE_OFFSET(index)                             | Similar to `OFFSET` except null is returned if *index* is out of bounds
 | b | SAFE_ORDINAL(index)                            | Similar to `OFFSET` except *index* begins at 1 and null is returned if *index* is out of bounds
 | * | SEC(numeric)                                   | Returns the secant of *numeric* in radians

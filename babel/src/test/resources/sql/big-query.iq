@@ -601,10 +601,565 @@ FROM t;
 !}
 
 #####################################################################
+# SAFE_ADD
+#
+# SAFE_ADD(value1, value2)
+#
+# Equivalent to the addition operator (+), but returns NULL if overflow/underflow occurs.
+SELECT SAFE_ADD(5, 4) as result;
++--------+
+| result |
++--------+
+|      9 |
++--------+
+(1 row)
+
+!ok
+
+# Overflow occurs if result is greater than 2^63 - 1
+SELECT SAFE_ADD(9223372036854775807, 2) as overflow_result;
++-----------------+
+| overflow_result |
++-----------------+
+|                 |
++-----------------+
+(1 row)
+
+!ok
+
+# Underflow occurs if result is less than -2^63
+SELECT SAFE_ADD(-9223372036854775806, -3) as underflow_result;
++------------------+
+| underflow_result |
++------------------+
+|                  |
++------------------+
+(1 row)
+
+!ok
+
+SELECT SAFE_ADD(CAST(1.7e308 as DOUBLE), CAST(1.7e308 as DOUBLE)) as double_overflow;
++-----------------+
+| double_overflow |
++-----------------+
+|                 |
++-----------------+
+(1 row)
+
+!ok
+
+SELECT SAFE_ADD(9, cast(9.999999999999999999e75 as DECIMAL(38, 19))) as decimal_overflow;
++------------------+
+| decimal_overflow |
++------------------+
+|                  |
++------------------+
+(1 row)
+
+!ok
+
+# NaN arguments should return NaN
+SELECT SAFE_ADD(CAST('NaN' AS DOUBLE), CAST(3 as BIGINT)) as NaN_result;
++------------+
+| NaN_result |
++------------+
+|        NaN |
++------------+
+(1 row)
+
+!ok
+
+#####################################################################
+# SAFE_DIVIDE
+#
+# SAFE_DIVIDE(value1, value2)
+#
+# Equivalent to the divide operator (/), but returns NULL if overflow/underflow occurs 
+# or if value2 is zero.
+SELECT SAFE_DIVIDE(20, 4) as result;
++--------+
+| result |
++--------+
+|    5.0 |
++--------+
+(1 row)
+
+!ok
+
+# Dividing by zero should return NULL
+SELECT SAFE_DIVIDE(-9223372036854775806, 0) as zero_result;
++-------------+
+| zero_result |
++-------------+
+|             |
++-------------+
+(1 row)
+
+!ok
+
+SELECT SAFE_DIVIDE(CAST(1.7e308 as DOUBLE), CAST(1.7e-308 as DOUBLE)) as double_overflow;
++-----------------+
+| double_overflow |
++-----------------+
+|                 |
++-----------------+
+(1 row)
+
+!ok
+
+SELECT SAFE_DIVIDE(CAST(-3.5e75 AS DECIMAL(76, 0)), CAST(3.5e-75 AS DECIMAL(76, 0))) 
+    as decimal_overflow;
++------------------+
+| decimal_overflow |
++------------------+
+|                  |
++------------------+
+(1 row)
+
+!ok
+
+# NaN arguments should return NaN
+SELECT SAFE_DIVIDE(CAST('NaN' AS DOUBLE), CAST(3 as BIGINT)) as NaN_result;
++------------+
+| NaN_result |
++------------+
+|        NaN |
++------------+
+(1 row)
+
+!ok
+
+# Expression parameters should be valid
+SELECT SAFE_DIVIDE(1, CAST(1 AS DOUBLE) / CAST(9223372036854775807 AS DOUBLE)) as expr_result;
++----------------------+
+| expr_result          |
++----------------------+
+| 9.223372036854776E18 |
++----------------------+
+(1 row)
+
+!ok
+#####################################################################
+# SAFE_MULTIPLY
+#
+# SAFE_MULTIPLY(value1, value2)
+#
+# Equivalent to the mulitply operator (*), but returns NULL if overflow/underflow occurs.
+SELECT SAFE_MULTIPLY(5, 4) as result;
++--------+
+| result |
++--------+
+|     20 |
++--------+
+(1 row)
+
+!ok
+
+# Overflow occurs if result is greater than 2^63 - 1
+SELECT SAFE_MULTIPLY(9223372036854775807, 2) as overflow_result;
++-----------------+
+| overflow_result |
++-----------------+
+|                 |
++-----------------+
+(1 row)
+
+!ok
+
+# Underflow occurs if result is less than -2^63
+SELECT SAFE_MULTIPLY(-9223372036854775806, 3) as underflow_result;
++------------------+
+| underflow_result |
++------------------+
+|                  |
++------------------+
+(1 row)
+
+!ok
+
+SELECT SAFE_MULTIPLY(CAST(1.7e308 as DOUBLE), CAST(3 as BIGINT)) as double_overflow;
++-----------------+
+| double_overflow |
++-----------------+
+|                 |
++-----------------+
+(1 row)
+
+!ok
+
+SELECT SAFE_MULTIPLY(CAST(-3.5e75 AS DECIMAL(76, 0)), CAST(10 AS BIGINT)) as decimal_overflow;
++------------------+
+| decimal_overflow |
++------------------+
+|                  |
++------------------+
+(1 row)
+
+!ok
+
+# NaN arguments should return NaN
+SELECT SAFE_MULTIPLY(CAST('NaN' AS DOUBLE), CAST(3 as BIGINT)) as NaN_result;
++------------+
+| NaN_result |
++------------+
+|        NaN |
++------------+
+(1 row)
+
+!ok
+
+#####################################################################
+# SAFE_NEGATE
+#
+# SAFE_NEGATE(value)
+#
+# Returns value * -1, or NULL on overflow.
+SELECT SAFE_NEGATE(5) as result;
++--------+
+| result |
++--------+
+|     -5 |
++--------+
+(1 row)
+
+!ok
+
+SELECT SAFE_NEGATE(-5) as result;
++--------+
+| result |
++--------+
+|      5 |
++--------+
+(1 row)
+
+!ok
+
+SELECT SAFE_NEGATE(-9223372036854775808) as overflow_result;
++-----------------+
+| overflow_result |
++-----------------+
+|                 |
++-----------------+
+(1 row)
+
+!ok
+
+SELECT SAFE_NEGATE(1 + 2 + 3 + 4) as expr_result;
++-------------+
+| expr_result |
++-------------+
+|         -10 |
++-------------+
+(1 row)
+
+!ok
+
+#####################################################################
+# SAFE_SUBTRACT
+#
+# SAFE_SUBTRACT(value1, value2)
+#
+# Equivalent to the subtraction operator (-), but returns NULL if overflow/underflow occurs.
+SELECT SAFE_SUBTRACT(5, 4) as result;
++--------+
+| result |
++--------+
+|      1 |
++--------+
+(1 row)
+
+!ok
+
+# Overflow occurs if result is greater than 2^63 - 1
+SELECT SAFE_SUBTRACT(9223372036854775807, -2) as overflow_result;
++-----------------+
+| overflow_result |
++-----------------+
+|                 |
++-----------------+
+(1 row)
+
+!ok
+
+# Underflow occurs if result is less than -2^63
+SELECT SAFE_SUBTRACT(-9223372036854775806, 3) as underflow_result;
++------------------+
+| underflow_result |
++------------------+
+|                  |
++------------------+
+(1 row)
+
+!ok
+
+SELECT SAFE_SUBTRACT(CAST(1.7e308 as DOUBLE), CAST(-1.7e308 as DOUBLE)) as double_overflow;
++-----------------+
+| double_overflow |
++-----------------+
+|                 |
++-----------------+
+(1 row)
+
+!ok
+
+SELECT SAFE_SUBTRACT(9, cast(-9.999999999999999999e75 as DECIMAL(38, 19))) as decimal_overflow;
++------------------+
+| decimal_overflow |
++------------------+
+|                  |
++------------------+
+(1 row)
+
+!ok
+
+# NaN arguments should return NaN
+SELECT SAFE_SUBTRACT(CAST('NaN' AS DOUBLE), CAST(3 as BIGINT)) as NaN_result;
++------------+
+| NaN_result |
++------------+
+|        NaN |
++------------+
+(1 row)
+
+!ok
+
+# Expression parameters should be valid
+SELECT SAFE_SUBTRACT(1 + 2 + 3, 5) as expr_result;
++-------------+
+| expr_result |
++-------------+
+|           1 |
++-------------+
+(1 row)
+
+!ok
+
+#####################################################################
 # NOT EQUAL Operator (value1 != value2)
 #
 # Compares value1 and value2 and returns TRUE if not equal.
 SELECT (5 != 3) as result;
++--------+
+| result |
++--------+
+| true   |
++--------+
+(1 row)
+
+!ok
+
+SELECT (5 != 5) as result;
++--------+
+| result |
++--------+
+| false  |
++--------+
+(1 row)
+
+!ok
+
+#####################################################################
+# MODULO % OPERATOR (value1 % value2)
+#
+# Returns the remainder of dividing value1 by value2.
+SELECT (5 % 3) as result;
++--------+
+| result |
++--------+
+|      2 |
++--------+
+(1 row)
+
+!ok
+
+SELECT (19 % 19) as result;
++--------+
+| result |
++--------+
+|      0 |
++--------+
+(1 row)
+
+!ok
+
+#####################################################################
+# REGEXP_CONTAINS(value, regexp)
+#
+# Takes two STRING values. Returns TRUE if value is a partial match
+# for the regular expression, regexp.
+# If the regexp argument is invalid, the function returns an error.
+# Uses java.util.regex as a standard for regex processing
+# in Calcite instead of RE2 used by BigQuery/GoogleSQL.
+
+SELECT
+  email,
+  REGEXP_CONTAINS(email, '@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+') AS is_valid
+FROM
+  (SELECT
+    ARRAY['foo@example.com', 'bar@example.org', 'www.example.net']
+    AS addresses),
+  UNNEST(addresses) AS email;
++-----------------+----------+
+| email           | is_valid |
++-----------------+----------+
+| bar@example.org | true     |
+| foo@example.com | true     |
+| www.example.net | false    |
++-----------------+----------+
+(3 rows)
+
+!ok
+
+SELECT
+  email,
+  REGEXP_CONTAINS(email, '^([\w.+-]+@foo\.com|[\w.+-]+@bar\.org)$')
+    AS valid_email_address,
+  REGEXP_CONTAINS(email, '^[\w.+-]+@foo\.com|[\w.+-]+@bar\.org$')
+    AS without_parentheses
+FROM
+  (SELECT
+    ARRAY['a@foo.com', 'a@foo.computer', 'b@bar.org', '!b@bar.org', 'c@buz.net']
+    AS addresses),
+  UNNEST(addresses) AS email;
++----------------+---------------------+---------------------+
+| email          | valid_email_address | without_parentheses |
++----------------+---------------------+---------------------+
+| a@foo.com      | true                | true                |
+| a@foo.computer | false               | true                |
+| b@bar.org      | true                | true                |
+| !b@bar.org     | false               | true                |
+| c@buz.net      | false               | false               |
++----------------+---------------------+---------------------+
+(5 rows)
+
+!ok
+
+SELECT REGEXP_CONTAINS('abc def ghi', '(abc');
+Invalid regular expression for REGEXP_CONTAINS: 'Unclosed group near index 4 (abc'
+!error
+
+SELECT REGEXP_CONTAINS('abc def ghi', '[z-a]');
+Invalid regular expression for REGEXP_CONTAINS: 'Illegal character range near index 3 [z-a]    ^'
+!error
+
+SELECT REGEXP_CONTAINS('abc def ghi', '{2,1}');
+Invalid regular expression for REGEXP_CONTAINS: 'Illegal repetition range near index 4 {2,1}     ^'
+!error
+
+#####################################################################
+# REGEXP_EXTRACT(value, regexp[, position[, occurrence]])
+#
+# Returns the substring in value that matches the regexp.
+# Returns NULL if there is no match, or if position or occurrence are beyond range.
+# Returns an exception if regex, position or occurrence are invalid.
+
+WITH email_addresses AS
+  (SELECT 'foo@example.com' as email
+  UNION ALL
+  SELECT 'bar@example.org' as email
+  UNION ALL
+  SELECT 'baz@example.net' as email)
+SELECT
+  REGEXP_EXTRACT(email, '^[a-zA-Z0-9_.+-]+')
+  AS user_name
+FROM email_addresses;
++-----------+
+| user_name |
++-----------+
+| foo       |
+| bar       |
+| baz       |
++-----------+
+(3 rows)
+
+!ok
+
+WITH
+characters AS (
+ SELECT 'ab' AS value, '.b' AS regex UNION ALL
+ SELECT 'ab' AS value, '(.)b' AS regex UNION ALL
+ SELECT 'xyztb' AS value, '(.)+b' AS regex UNION ALL
+ SELECT 'ab' AS value, '(z)?b' AS regex
+)
+SELECT value, regex, REGEXP_EXTRACT(value, regex) AS result FROM characters;
++-------+-------+--------+
+| value | regex | result |
++-------+-------+--------+
+| ab    | (.)b  | a      |
+| ab    | (z)?b |        |
+| ab    | .b    | ab     |
+| xyztb | (.)+b | t      |
++-------+-------+--------+
+(4 rows)
+
+!ok
+
+WITH example AS
+(SELECT 'Hello Helloo and Hellooo' AS value, 'H?ello+' AS regex, 1 as position,
+1 AS occurrence UNION ALL
+SELECT 'Hello Helloo and Hellooo', 'H?ello+', 1, 2 UNION ALL
+SELECT 'Hello Helloo and Hellooo', 'H?ello+', 1, 3 UNION ALL
+SELECT 'Hello Helloo and Hellooo', 'H?ello+', 1, 4 UNION ALL
+SELECT 'Hello Helloo and Hellooo', 'H?ello+', 2, 1 UNION ALL
+SELECT 'Hello Helloo and Hellooo', 'H?ello+', 3, 1 UNION ALL
+SELECT 'Hello Helloo and Hellooo', 'H?ello+', 3, 2 UNION ALL
+SELECT 'Hello Helloo and Hellooo', 'H?ello+', 3, 3 UNION ALL
+SELECT 'Hello Helloo and Hellooo', 'H?ello+', 20, 1 UNION ALL
+SELECT 'cats&dogs&rabbits' ,'\\w+&', 1, 2 UNION ALL
+SELECT 'cats&dogs&rabbits', '\\w+&', 2, 3
+)
+SELECT value, regex, position, occurrence, REGEXP_EXTRACT(value, regex,
+position, occurrence) AS regexp_value FROM example;
++--------------------------+---------+----------+------------+--------------+
+| value                    | regex   | position | occurrence | regexp_value |
++--------------------------+---------+----------+------------+--------------+
+| Hello Helloo and Hellooo | H?ello+ |        1 |          1 | Hello        |
+| Hello Helloo and Hellooo | H?ello+ |        1 |          2 | Helloo       |
+| Hello Helloo and Hellooo | H?ello+ |        1 |          3 | Hellooo      |
+| Hello Helloo and Hellooo | H?ello+ |        1 |          4 |              |
+| Hello Helloo and Hellooo | H?ello+ |        2 |          1 | ello         |
+| Hello Helloo and Hellooo | H?ello+ |       20 |          1 |              |
+| Hello Helloo and Hellooo | H?ello+ |        3 |          1 | Helloo       |
+| Hello Helloo and Hellooo | H?ello+ |        3 |          2 | Hellooo      |
+| Hello Helloo and Hellooo | H?ello+ |        3 |          3 |              |
+| cats&dogs&rabbits        | \\w+&   |        1 |          2 |              |
+| cats&dogs&rabbits        | \\w+&   |        2 |          3 |              |
++--------------------------+---------+----------+------------+--------------+
+(11 rows)
+
+!ok
+
+SELECT REGEXP_EXTRACT("abcadcabcaecghi", "a.+c");
++--------------+
+| EXPR$0       |
++--------------+
+| abcadcabcaec |
++--------------+
+(1 row)
+
+!ok
+
+SELECT REGEXP_EXTRACT("abcadcabcaecghi", "abc(a.c)", 4);
++--------+
+| EXPR$0 |
++--------+
+| aec    |
++--------+
+(1 row)
+
+!ok
+
+SELECT REGEXP_EXTRACT("abcadcabcaecghi", "a.c", 25);
++--------+
+| EXPR$0 |
++--------+
+|        |
++--------+
+(1 row)
+
+!ok
+
+SELECT REGEXP_EXTRACT("abcadcabcaecghi", "a.c", 1, 5);
 +--------+
 | result |
 +--------+
