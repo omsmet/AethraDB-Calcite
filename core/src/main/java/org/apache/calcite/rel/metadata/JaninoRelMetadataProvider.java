@@ -19,6 +19,8 @@ package org.apache.calcite.rel.metadata;
 import org.apache.calcite.config.CalciteSystemProperty;
 import org.apache.calcite.interpreter.JaninoRexCompiler;
 import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.metadata.janino.GeneratedMetadata_CollationHandler;
+import org.apache.calcite.rel.metadata.janino.GeneratedMetadata_ExplainVisibilityHandler;
 import org.apache.calcite.rel.metadata.janino.RelMetadataHandlerGeneratorUtil;
 import org.apache.calcite.util.Util;
 
@@ -128,18 +130,26 @@ public class JaninoRelMetadataProvider implements RelMetadataProvider, MetadataH
       Class<MH> handlerClass,
       List<? extends MetadataHandler<? extends Metadata>> handlers) {
 
-    final List<? extends MetadataHandler<? extends Metadata>> uniqueHandlers = handlers.stream()
-        .distinct()
-        .collect(Collectors.toList());
-    RelMetadataHandlerGeneratorUtil.HandlerNameAndGeneratedCode handlerNameAndGeneratedCode =
-        RelMetadataHandlerGeneratorUtil.generateHandler(handlerClass, uniqueHandlers);
+    final List<? extends MetadataHandler<? extends Metadata>> uniqueHandlers = handlers.stream().distinct().collect(Collectors.toList());
 
-    try {
-      return compile(handlerNameAndGeneratedCode.getHandlerName(),
-          handlerNameAndGeneratedCode.getGeneratedCode(), handlerClass, uniqueHandlers);
-    } catch (CompileException | IOException e) {
-      throw new RuntimeException("Error compiling:\n"
-          + handlerNameAndGeneratedCode.getGeneratedCode(), e);
+    // AethraDB specific fixed pre-generated handlers to be able to generate shared library
+    if (handlerClass.getName().equals("org.apache.calcite.rel.metadata.BuiltInMetadata$Collation$Handler")) {
+      return handlerClass.cast(new GeneratedMetadata_CollationHandler(((org.apache.calcite.rel.metadata.RelMdCollation) uniqueHandlers.get(0))));
+
+    } else if (handlerClass.getName().equals("org.apache.calcite.rel.metadata.BuiltInMetadata$ExplainVisibility$Handler")) {
+      return handlerClass.cast(new GeneratedMetadata_ExplainVisibilityHandler(((org.apache.calcite.rel.metadata.RelMdExplainVisibility) uniqueHandlers.get(0))));
+
+    } else {
+      // Fallback case: should not occur in AethraDB planner library
+      RelMetadataHandlerGeneratorUtil.HandlerNameAndGeneratedCode handlerNameAndGeneratedCode =
+          RelMetadataHandlerGeneratorUtil.generateHandler(handlerClass, uniqueHandlers);
+
+      try {
+        return compile(handlerNameAndGeneratedCode.getHandlerName(),
+            handlerNameAndGeneratedCode.getGeneratedCode(), handlerClass, uniqueHandlers);
+      } catch (CompileException | IOException e) {
+        throw new RuntimeException("Error compiling:\n" + handlerNameAndGeneratedCode.getGeneratedCode(), e);
+      }
     }
   }
 
