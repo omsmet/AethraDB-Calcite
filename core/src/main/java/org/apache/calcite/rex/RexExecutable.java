@@ -54,23 +54,25 @@ public class RexExecutable {
 
   private static Function1<DataContext, @Nullable Object @Nullable []> compile(String code,
       Object reason) {
-    try {
-      final ClassBodyEvaluator cbe = new ClassBodyEvaluator();
-      cbe.setClassName(GENERATED_CLASS_NAME);
-      cbe.setExtendedClass(Utilities.class);
-      cbe.setImplementedInterfaces(new Class[] {Function1.class, Serializable.class});
-      cbe.setParentClassLoader(RexExecutable.class.getClassLoader());
-      cbe.cook(new Scanner(null, new StringReader(code)));
-      Class c = cbe.getClazz();
-      //noinspection unchecked
-      final Constructor<Function1<DataContext, @Nullable Object @Nullable []>> constructor =
-          c.getConstructor();
-      return constructor.newInstance();
-    } catch (CompileException | IOException | InstantiationException
-        | IllegalAccessException | InvocationTargetException
-        | NoSuchMethodException e) {
-      throw new RuntimeException("While compiling " + reason, e);
-    }
+// DIFF: hard-coded for AethraPlannerLib
+//    try {
+//      final ClassBodyEvaluator cbe = new ClassBodyEvaluator();
+//      cbe.setClassName(GENERATED_CLASS_NAME);
+//      cbe.setExtendedClass(Utilities.class);
+//      cbe.setImplementedInterfaces(new Class[] {Function1.class, Serializable.class});
+//      cbe.setParentClassLoader(RexExecutable.class.getClassLoader());
+//      cbe.cook(new Scanner(null, new StringReader(code)));
+//      Class c = cbe.getClazz();
+//      //noinspection unchecked
+//      final Constructor<Function1<DataContext, @Nullable Object @Nullable []>> constructor =
+//          c.getConstructor();
+//      return constructor.newInstance();
+//    } catch (CompileException | IOException | InstantiationException
+//        | IllegalAccessException | InvocationTargetException
+//        | NoSuchMethodException e) {
+//      throw new RuntimeException("While compiling " + reason, e);
+//    }
+    return new Reducer();
   }
 
   public void setDataContext(DataContext dataContext) {
